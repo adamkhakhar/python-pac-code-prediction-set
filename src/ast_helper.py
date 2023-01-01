@@ -8,7 +8,10 @@ class Node:
         self.children = []
         self.start = 0
         self.end = 0
-        self.indices = []
+        self.intervals = []
+        self.tokens = []
+        self.logprobs = []
+        self.nll = None
 
     def __str__(self):
         def visit(n, pref):
@@ -16,9 +19,11 @@ class Node:
                 pref,
                 f"|{n.code}|",
                 f"[{n.start}-{n.end}]",
-                n.indices,
+                n.intervals,
                 "|",
-                [self.code[t[0] : t[1]] for t in n.indices],
+                [self.code[t[0] : t[1]] for t in n.intervals],
+                "||",
+                n.tokens,
             )
             for c in n.children:
                 visit(c, pref + "\t")
