@@ -6,10 +6,20 @@ class Node:
     def __init__(self, code):
         self.code = code
         self.children = []
+        self.start = 0
+        self.end = 0
+        self.indices = []
 
     def __str__(self):
         def visit(n, pref):
-            print(pref, n.code)
+            print(
+                pref,
+                f"|{n.code}|",
+                f"[{n.start}-{n.end}]",
+                n.indices,
+                "|",
+                [self.code[t[0] : t[1]] for t in n.indices],
+            )
             for c in n.children:
                 visit(c, pref + "\t")
 
@@ -31,12 +41,25 @@ class CheckVisitor(ast.NodeVisitor):
         self.print_flag = print_flag
 
     def visit(self, node):
+        if len(str(ast.unparse(node)).strip()) == 0:
+            return None
         curr = Node(str(ast.unparse(node)))
         children = []
         for n in ast.iter_child_nodes(node):
-            children.append(self.visit(n))
+            c_node = self.visit(n)
+            if c_node is not None:
+                children.append(c_node)
         curr.children = children
         return curr
+
+
+def get_node(code: str) -> Node:
+    v = CheckVisitor(code)
+    try:
+        t = ast.parse(code)
+    except:
+        return None
+    return v.visit(t)
 
 
 def get_num_nodes_from_code(code):
