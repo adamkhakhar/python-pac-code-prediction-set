@@ -85,7 +85,7 @@ def intervals_to_token_probs(parent, map_index_to_token_ind, tokens, token_logpr
         intervals_to_token_probs(c, map_index_to_token_ind, tokens, token_logprobs)
 
 
-def add_probability_to_nodes(root, response):
+def add_probability_to_nodes(root, response, debug=False):
     # remove all spaces in tokens
     response["logprobs"]["tokens"] = [
         tok.replace(" ", "") for tok in response["logprobs"]["tokens"]
@@ -96,13 +96,15 @@ def add_probability_to_nodes(root, response):
         for _ in range(len(response["logprobs"]["tokens"][i])):
             map_index_to_token_ind[output_index] = i
             output_index += 1
-
-    for key in map_index_to_token_ind:
-        print(key, "->", response["logprobs"]["tokens"][map_index_to_token_ind[key]])
-    print("----")
-    for i in range(len(root.code)):
-        print(i, "->", root.code[i])
-    print("----")
+    if debug:
+        for key in map_index_to_token_ind:
+            print(
+                key, "->", response["logprobs"]["tokens"][map_index_to_token_ind[key]]
+            )
+        print("----")
+        for i in range(len(root.code)):
+            print(i, "->", root.code[i])
+        print("----")
     intervals_to_token_probs(
         root,
         map_index_to_token_ind,
