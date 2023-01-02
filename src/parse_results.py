@@ -13,12 +13,6 @@ import ast_helper
 from utils import utils
 
 
-def execute_function_on_output(fn, directories: List[str], path=PATH_TO_OUTPUT):
-    for directory in directories:
-        for file in [f for f in os.listdir(f"{PATH_TO_OUTPUT}/{directories}")]:
-            fn(utils.read_json(file))
-
-
 def populate_start_and_end(parent):
     curr_ind = 0
     # assumes parent.children are in order of presence

@@ -1,0 +1,6 @@
+1. create prompt and solution (humaneval_dataset_interface.py)
+2. get prediction (codex_interface.py, inference.py)
+3. parse results into AST (parse_results.py, ast_helper.py)
+4. compute optimization (optimize.py)
+5. evaluate optimization (eval_optimization.py)
+6. create plots and visualize results

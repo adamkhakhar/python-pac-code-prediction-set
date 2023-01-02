@@ -2,7 +2,6 @@ import os
 import json
 from typing import List
 
-
 def read_file(path):
     with open(path) as f:
         return str(f.read())

@@ -12,6 +12,8 @@ class Node:
         self.tokens = []
         self.logprobs = []
         self.nll = None
+        self.deleted = None
+        self.colon_name=None
 
     def __str__(self):
         def visit(n, pref):
