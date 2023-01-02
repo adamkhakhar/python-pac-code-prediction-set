@@ -54,8 +54,16 @@ def make_dependent(parent):
         make_dependent(c)
 
 
+def remove_all_spaces_in_code(parent):
+    parent.code = parent.code.replace(" ", "")
+    for i in range(len(parent.children)):
+        parent.children[i] = remove_all_spaces_in_code(parent.children[i])
+    return parent
+
+
 def code_to_final_ast(code: str):
     root = ast_helper.get_node(code)
+    remove_all_spaces_in_code(root)
     populate_start_and_end(root)
     root.end = len(root.code)
     assert_start_end_are_correct(root, root.code)
@@ -66,8 +74,7 @@ def code_to_final_ast(code: str):
 def intervals_to_token_probs(parent, map_index_to_token_ind, tokens, token_logprobs):
     token_inds = []
     for tup in parent.intervals:
-        # tup -1 because ast intervals usually contain trailing space, but openai has tokens with leading space
-        for output_index in range(tup[0], tup[1] - 1):
+        for output_index in range(tup[0], tup[1]):
             token_inds.append(map_index_to_token_ind[output_index])
     token_inds = set(token_inds)
     for token_ind in token_inds:
@@ -79,9 +86,10 @@ def intervals_to_token_probs(parent, map_index_to_token_ind, tokens, token_logpr
 
 
 def add_probability_to_nodes(root, response):
-    # make sure if first token is return, strip leading
-    if response["logprobs"]["tokens"][0].endswith("return"):
-        response["logprobs"]["tokens"][0] = response["logprobs"]["tokens"][0].lstrip()
+    # remove all spaces in tokens
+    response["logprobs"]["tokens"] = [
+        tok.replace(" ", "") for tok in response["logprobs"]["tokens"]
+    ]
     map_index_to_token_ind = {}
     output_index = 0
     for i in range(len(response["logprobs"]["tokens"])):
@@ -104,7 +112,7 @@ def add_probability_to_nodes(root, response):
 
 
 if __name__ == "__main__":
-    data = utils.read_json(PATH_TO_OUTPUT + "/" + "1672524017/7")
+    data = utils.read_json(PATH_TO_OUTPUT + "/" + "1672525916/100")
     for key in data:
         print(key)
         print(data[key])
