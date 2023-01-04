@@ -1,6 +1,7 @@
 import ast
 import traceback
 from colorama import Fore, Back, Style
+import json
 
 
 class Node:
@@ -18,24 +19,32 @@ class Node:
 
     def __str__(self):
         def visit(n, pref):
-            print(
-                pref,
-                # f"code:|{n.code}|",
-                # f"[{n.start}-{n.end}]",
-                # n.intervals,
-                # "|",
-                Fore.BLACK + Back.RED if n.deleted else Style.RESET_ALL,
-                f'"{n.code}"',
-                [self.code[t[0] : t[1]] for t in n.intervals],
-                # n.tokens,
-                "[DELETED]" if n.deleted else "",
-                Style.RESET_ALL,
-            )
+            s = pref
+            s += Fore.BLACK + Back.RED if n.deleted else Style.RESET_ALL
+            s += f'"{n.code}"'
+            s += str([self.code[t[0] : t[1]] for t in n.intervals])
+            s += "[DELETED]" if n.deleted else ""
+            s += Style.RESET_ALL
+            s += "\n"
             for c in n.children:
-                visit(c, pref + "\t")
+                s += visit(c, pref + "\t")
+            return s
 
-        visit(self, "")
-        return ""
+        s = visit(self, "")
+        return s
+
+    def toJSON(self):
+        return {
+            "code": self.code,
+            "start": self.start,
+            "end": self.end,
+            "intervals": self.intervals,
+            "tokens": self.tokens,
+            "logprobs": self.logprobs,
+            "nll": self.nll,
+            "deleted": self.deleted,
+            "children": [c.toJSON() for c in self.children],
+        }
 
 
 def total_nodes(node):
