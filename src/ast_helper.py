@@ -1,5 +1,6 @@
 import ast
-import ipdb
+import traceback
+from colorama import Fore, Back, Style
 
 
 class Node:
@@ -13,19 +14,22 @@ class Node:
         self.logprobs = []
         self.nll = None
         self.deleted = None
-        self.colon_name=None
+        self.colon_name = None
 
     def __str__(self):
         def visit(n, pref):
             print(
                 pref,
-                f"|{n.code}|",
-                f"[{n.start}-{n.end}]",
-                n.intervals,
-                "|",
+                # f"code:|{n.code}|",
+                # f"[{n.start}-{n.end}]",
+                # n.intervals,
+                # "|",
+                Fore.BLACK + Back.RED if n.deleted else Style.RESET_ALL,
+                f'"{n.code}"',
                 [self.code[t[0] : t[1]] for t in n.intervals],
-                "||",
-                n.tokens,
+                # n.tokens,
+                "[DELETED]" if n.deleted else "",
+                Style.RESET_ALL,
             )
             for c in n.children:
                 visit(c, pref + "\t")
@@ -60,11 +64,13 @@ class CheckVisitor(ast.NodeVisitor):
         return curr
 
 
-def get_node(code: str) -> Node:
+def get_node(code: str, print_traceback=False) -> Node:
     v = CheckVisitor(code)
     try:
         t = ast.parse(code)
     except:
+        if print_traceback:
+            print(traceback.format_exc())
         return None
     return v.visit(t)
 

@@ -192,8 +192,10 @@ def create_tree(tree, check, tuples):
             entire_tree_curr_parent = curr["entire_tree_parent"]
             pruned_tree_curr_node = ast_helper.Node(curr_child.code)
             pruned_tree_curr_node.nll = curr_child.nll
+            pruned_tree_curr_node.intervals = curr_child.intervals
             entire_tree_curr_node = ast_helper.Node(curr_child.code)
             entire_tree_curr_node.nll = curr_child.nll
+            entire_tree_curr_node.intervals = curr_child.intervals
 
             total_nodes += 1
             name_of_curr = curr_child.code + "::" + str(node_number)
@@ -227,17 +229,19 @@ def create_tree(tree, check, tuples):
                     }
                 )
             node_number += 1
-        return (
-            pruned_root.children[0] if len(pruned_root.children) > 0 else None,
-            entire_tree_with_deleted.children[0]
+        return {
+            "pruned_root": pruned_root.children[0]
+            if len(pruned_root.children) > 0
+            else None,
+            "entire_tree_with_deleted": entire_tree_with_deleted.children[0]
             if len(entire_tree_with_deleted.children) > 0
             else None,
-            map_node_name_to_include,
-            check,
-            tuples,
-            error_of_tree,
-            included_nodes / total_nodes,
-        )
+            "map": map_node_name_to_include,
+            "check": check,
+            "tuples": tuples,
+            "error_of_tree": error_of_tree,
+            "frac_included": included_nodes / total_nodes,
+        }
 
 
 def create_tree_from_optimization_result_lst(tree, m, max_cost_threshold: List):

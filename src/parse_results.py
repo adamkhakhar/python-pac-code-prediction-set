@@ -107,14 +107,14 @@ def add_probability_to_nodes(root, response, debug=False):
     )
 
 
-if __name__ == "__main__":
-    data = utils.read_json(PATH_TO_OUTPUT + "/" + "1672525916/100")
-    for key in data:
-        print(key)
-        print(data[key])
-        print("---")
-    prediction = "return" + data["response"]["choices"][0]["text"].split("\n")[0]
-    print("pred", prediction)
-    root = code_to_final_ast(prediction)
-    add_probability_to_nodes(root, data["response"]["choices"][0])
-    print(root)
+# if __name__ == "__main__":
+#     data = utils.read_json(PATH_TO_OUTPUT + "/" + "1672525916/100")
+#     for key in data:
+#         print(key)
+#         print(data[key])
+#         print("---")
+#     prediction = "return" + data["response"]["choices"][0]["text"].split("\n")[0]
+#     print("pred", prediction)
+#     root = code_to_final_ast(prediction)
+#     add_probability_to_nodes(root, data["response"]["choices"][0])
+#     print(root)
