@@ -96,15 +96,15 @@ if __name__ == "__main__":
         lambda x, output: output.append(utils.read_json(x)),
         ["1672524017", "1672525916"],
     )
-
-    max_costs = [-np.log(x) for x in np.linspace(1e-5, 1 - 1e-5, 100)]
+    taus = np.linspace(1e-5, 1 - 1e-5, 100)
+    max_costs = [-np.log(x) for x in taus]
 
     output_data = []
     cnt_valid = 0
-
+    print(len(results))
     results = [results[args.dataind]] if args.dataind >= 0 else results
     for i, sample in enumerate(results):
-        print(f"[{i}/{len(results)}]{'-'*10}", flush=True)
+        print(f"[{i}/{len(results)-1}]{'-'*10}", flush=True)
         pred_str = "return" + sample["response"]["choices"][0]["text"].split("\n")[0]
         target_str = sample["prompt"]["solution"].strip()
         try:
@@ -147,6 +147,7 @@ if __name__ == "__main__":
                 save_data["pred_str"] = pred_str
                 save_data["target_str"] = target_str
                 save_data["cost"] = max_costs[j]
+                save_data["tau"] = taus[j]
                 save_data["data_ind"] = i
                 save_data["tau_ind"] = j
                 save_data["output"] = optimize_output
@@ -156,7 +157,8 @@ if __name__ == "__main__":
                 save_data["output"]["entire_tree_with_deleted"] = save_data["output"][
                     "entire_tree_with_deleted"
                 ].toJSON()
-                save_data["output"]["check"] = str(save_data["output"]["check"])
+                if "check" in save_data["output"]:
+                    save_data["output"]["check"] = str(save_data["output"]["check"])
                 output_data.append(save_data)
             except:
                 traceback.print_exc()
@@ -166,6 +168,6 @@ if __name__ == "__main__":
     print(cnt_valid)
     os.makedirs(f"{ROOT_DIR}/results", exist_ok=True)
     utils.write_json(
-        f"{ROOT_DIR}/results/optimize_output_{args.dataind}.json",
+        f"{ROOT_DIR}/results/optimize_output_ind_{args.dataind}__m_{args.m}.json",
         {"output": output_data},
     )
