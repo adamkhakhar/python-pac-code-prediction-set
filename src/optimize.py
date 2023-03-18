@@ -71,6 +71,7 @@ def add_tree_constraints(o, tree, cost_id="", m=-1):
     ]
 
     if m != -1:
+        print("M=", m)
         HOLE_FLOAT = 0.99999
         # iterate through nodes and add constraint for number of holes
         sum_holes = 0
@@ -85,8 +86,8 @@ def add_tree_constraints(o, tree, cost_id="", m=-1):
                         # print("\tchild|", child_node.code if child_node in map_node_to_indicator else "(not in map):" + child_node.code)
                         sum_holes += (
                             HOLE_FLOAT
-                            * Not(map_node_to_indicator[node])
-                            * map_node_to_indicator[child_node]
+                            * Not(map_node_to_indicator[child_node])
+                            * map_node_to_indicator[node]
                             if node in map_node_to_indicator
                             and child_node in map_node_to_indicator
                             else 0
@@ -239,7 +240,7 @@ def create_tree(tree, check, tuples):
             "map": map_node_name_to_include,
             "check": check,
             "tuples": tuples,
-            "error_of_tree": error_of_tree,
+            "error_of_tree": sum(error_of_tree),
             "frac_included": included_nodes / total_nodes,
         }
 
