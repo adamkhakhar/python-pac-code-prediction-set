@@ -1,5 +1,5 @@
 # PAC Prediction Sets for Large Language Models of Code
-Adam Khakhar, Stephen Mell, Osbert Bastani
+Adam Khakhar, Stephen Mell, Osbert Bastani\
 [arXiv](https://arxiv.org/abs/2302.08703)
 ## Citation Information:
 ```
