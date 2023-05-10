@@ -3,7 +3,7 @@ from z3 import *
 import os
 import sys
 import numpy as np
-from typing import List
+from typing import List, Tuple, Dict, Union, Any
 
 BASE_DIR = os.path.dirname(__file__)
 ROOT_DIR = os.path.dirname(BASE_DIR)
@@ -12,7 +12,21 @@ import parse_results
 import ast_helper
 
 
-def add_tree_constraints(o, tree, cost_id="", m=-1):
+def add_tree_constraints(
+    o: z3.z3.Optimize, tree: ast_helper.Node, cost_id: str = "", m: int = -1
+) -> Tuple[List[float], List[Bool]]:
+    """
+    Adds constraints to the optimization problem for each node in the given tree.
+
+    Args:
+        o (Optimize): The optimization problem to add constraints to.
+        tree (Node): The root node of the tree to add constraints for.
+        cost_id (str, optional): The cost identifier. Defaults to an empty string.
+        m (int, optional): The maximum number of holes in the tree. Defaults to -1.
+
+    Returns:
+        tuple: A tuple containing a list of probabilities and a list of indicator variables for each node in the tree.
+    """
     ordered_probabilities = []
     indicator_variables = []
     map_node_to_indicator = {}
@@ -49,10 +63,18 @@ def add_tree_constraints(o, tree, cost_id="", m=-1):
             if curr_node in map_node_to_indicator
             else parent_indicator
         )
+        o.add(
+            Implies(
+                Not(curr_indicator_variable),
+                Or(Not(parent_indicator), Not(curr_indicator_variable)),
+            )
+        )  # new removal constraint
         for c in curr_node.children:
             if c in map_node_to_indicator:
                 child_indicator_variable = map_node_to_indicator[c]
-                o.add(Implies(child_indicator_variable, curr_indicator_variable))
+                o.add(
+                    Implies(child_indicator_variable, curr_indicator_variable)
+                )  # this is the converse of the child removal constraint
                 # print("implication: child: " + c.code + " ->  parent: " + curr_node.code)
             else:
                 for grand_child in c.children:
@@ -96,10 +118,20 @@ def add_tree_constraints(o, tree, cost_id="", m=-1):
     return ordered_probabilities, indicator_variables
 
 
-def solve_optimization_lst(tree, m, max_cost_threshold: List):
+def solve_optimization_lst(
+    tree: ast_helper.Node, m: int, max_cost_threshold: List[float]
+) -> Tuple[CheckSatResult, Model, int]:
     """
-    assumes max_cost_threshold sorted in descending order
-    solves optimization problem defined in first part of  https://www.overleaf.com/project/6304f33ff542595b403d373e
+    Solves an optimization problem to prune the given tree while minimizing the total error and keeping the total cost below a maximum threshold.
+    Assumes max_cost_threshold sorted in descending order.
+
+    Args:
+        tree (Node): The root node of the tree to prune.
+        m (int): The maximum number of holes in the tree.
+        max_cost_threshold (List[float]): A list of maximum total cost thresholds.
+
+    Returns:
+        tuple: A tuple containing the result of the optimization problem, the model of the optimization problem, and the number of indicator variables.
     """
     o = Optimize()
     assert all(
@@ -160,7 +192,22 @@ def solve_optimization_lst(tree, m, max_cost_threshold: List):
     return o.check(), o.model(), len(all_indicator_variables[0])
 
 
-def create_tree(tree, check, tuples):
+def create_tree(
+    tree: ast_helper.Node, check: CheckSatResult, tuples: List[Tuple[str, str]]
+) -> Dict[
+    str, Union[ast_helper.Node, CheckSatResult, List[Tuple[str, str]], float, float]
+]:
+    """
+    Creates a pruned tree from the given tree based on the result of an optimization problem.
+
+    Args:
+        tree (Node): The root node of the tree to prune.
+        check (CheckSatResult): The result of the optimization problem.
+        tuples (List[Tuple[str, str]]): A list of tuples, each containing a variable identifier and its value.
+
+    Returns:
+        dict: A dictionary containing the pruned root, the entire tree with deleted nodes, a map of node names to inclusion, a check status, a list of tuples, the total error of the tree, and the fraction of nodes included.
+    """
     if str(check) == "unsat":
         return None
     else:
@@ -245,7 +292,32 @@ def create_tree(tree, check, tuples):
         }
 
 
-def create_tree_from_optimization_result_lst(tree, m, max_cost_threshold: List):
+def create_tree_from_optimization_result_lst(
+    tree: ast_helper.Node, m: int, max_cost_threshold: List[float]
+) -> List[
+    Dict[
+        str,
+        Union[
+            ast_helper.Node,
+            CheckSatResult,
+            Dict[str, bool],
+            List[Tuple[str, str]],
+            float,
+            float,
+        ],
+    ]
+]:
+    """
+    Creates a list of pruned trees from the given tree for each maximum cost threshold in the given list.
+
+    Args:
+        tree (Node): The root node of the tree to prune.
+        m (int): The maximum number of holes in the tree.
+        max_cost_threshold (List[float]): A list of maximum total cost thresholds.
+
+    Returns:
+        list: A list of dictionaries, each containing a pruned tree for a maximum cost threshold in the given list.
+    """
     check, model, _ = solve_optimization_lst(tree, m, max_cost_threshold)
     pruned_tree_data = []
     # make list of tuples: (variable_id, variable)
