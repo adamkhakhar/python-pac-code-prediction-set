@@ -1,6 +1,6 @@
 import os
 import sys
-import numpy as np
+from typing import Dict, Optional, Union
 import time
 
 BASE_DIR = os.path.dirname(__file__)
@@ -17,7 +17,23 @@ import codex_interface
 SLEEP_PER_REQ = 60
 
 
-def execute_inference_humaneval(i: int, logging_dir: str, max_tokens=30):
+def execute_inference_humaneval(
+    i: int, logging_dir: str, max_tokens: int = 30
+) -> Optional[Dict[str, Union[Dict, str]]]:
+    """
+    Executes inference on a human evaluation dataset and logs the results.
+
+    This function retrieves a sample from the human evaluation dataset, prepares an inference prompt from the sample,
+    executes the inference, and logs the results. If the prepared prompt is None, the function returns None.
+
+    Args:
+        i (int): The index of the sample in the human evaluation dataset.
+        logging_dir (str): The directory to log the results in.
+        max_tokens (int, optional): The maximum number of tokens in the generated completion. Defaults to 30.
+
+    Returns:
+        dict: A dictionary containing the prompt, response, and name of the log file, or None if the prepared prompt is None.
+    """
     sample = humaneval_dataset_interface.data[i]
     prompt_dict = humaneval_dataset_interface.prepare_inference_prompt_solution(
         sample["prompt"],
