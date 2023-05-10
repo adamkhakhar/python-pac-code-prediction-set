@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-from typing import List
+from typing import List, Callable, Dict, Union, Any
 import traceback
 import ipdb
 import argparse
@@ -14,18 +14,50 @@ sys.path.append(BASE_DIR)
 import parse_results
 from utils import utils
 import optimize
+import ast_helper
 
 PATH_TO_OUTPUT = "/home/akhakhar/shared/code-davinci"
 
 
-def retrieve_results(output, fn, directories: List[str], path=PATH_TO_OUTPUT):
+def retrieve_results(
+    output: Any, fn: Callable, directories: List[str], path: str = PATH_TO_OUTPUT
+) -> Any:
+    """
+    Retrieves results from specified directories and applies a function to each file.
+
+    Args:
+        output (Any): The initial output to which the results of the function will be added.
+        fn (Callable): The function to apply to each file.
+        directories (List[str]): The directories to retrieve results from.
+        path (str, optional): The base path of the directories. Defaults to PATH_TO_OUTPUT.
+
+    Returns:
+        Any: The output after applying the function to each file.
+    """
     for directory in directories:
         for file in [f for f in os.listdir(f"{PATH_TO_OUTPUT}/{directory}")]:
             fn(f"{PATH_TO_OUTPUT}/{directory}/{file}", output)
     return output
 
 
-def is_subtree(target_root_code, target, pruned_root_code, pruned):
+def is_subtree(
+    target_root_code: str,
+    target: ast_helper.Node,
+    pruned_root_code: str,
+    pruned: ast_helper.Node,
+) -> Dict[str, Union[bool, str]]:
+    """
+    Checks if a pruned tree is a subtree of a target tree.
+
+    Args:
+        target_root_code (str): The code of the root node of the target tree.
+        target (Node): The root node of the target tree.
+        pruned_root_code (str): The code of the root node of the pruned tree.
+        pruned (Node): The root node of the pruned tree.
+
+    Returns:
+        dict: A dictionary containing a boolean indicating whether the pruned tree is a subtree of the target tree, and a reason for the result.
+    """
     # check if pruned tree is subtree of target tree
     def get_string_intervals(code, n):
         return "#".join([code[t[0] : t[1]] for t in n.intervals])
@@ -90,6 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("--m", dest="m", type=int, default=1)
     parser.add_argument("--dataind", dest="dataind", type=int, default=-1)
     parser.add_argument("--noprint", action="store_false")
+    parser.add_argument("--nosave", action="store_true")
     args = parser.parse_args()
     results = retrieve_results(
         [],
@@ -114,6 +147,7 @@ if __name__ == "__main__":
             )
             target_tree = parse_results.code_to_final_ast(target_str)
         except:
+            traceback.print_exc()
             continue
         pruned_tree_data = optimize.create_tree_from_optimization_result_lst(
             pred_tree, args.m, max_costs
@@ -167,7 +201,8 @@ if __name__ == "__main__":
 
     print(cnt_valid)
     os.makedirs(f"{ROOT_DIR}/results", exist_ok=True)
-    utils.write_json(
-        f"{ROOT_DIR}/results/optimize_output_ind_{args.dataind}__m_{args.m}.json",
-        {"output": output_data},
-    )
+    if not args.nosave:
+        utils.write_json(
+            f"{ROOT_DIR}/results/optimize_output_ind_{args.dataind}__m_{args.m}.json",
+            {"output": output_data},
+        )
