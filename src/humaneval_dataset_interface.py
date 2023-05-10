@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, Callable
 
 PATH_TO_DATA = "/home/akhakhar/data/human_eval/HumanEval.jsonl"
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
