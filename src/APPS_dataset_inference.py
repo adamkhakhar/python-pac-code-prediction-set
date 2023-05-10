@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-import ipdb
+from typing import List, Dict, Union, Callable
 
 
 PATH_TO_DATA = "/home/akhakhar/data/APPS/test/"
@@ -15,7 +15,17 @@ from ast_helper import get_num_nodes_from_code
 from utils import utils
 
 
-def fetch_data_from_index(i: int):
+def fetch_data_from_index(i: int) -> Dict[str, Union[str, Dict]]:
+    """
+    Fetches question and solutions data from a specified index.
+
+    Args:
+        i (int): The index from which to fetch the data.
+
+    Returns:
+        dict: A dictionary containing the question and solutions data.
+    """
+
     zero_padded = "0" * (4 - len(str(i))) + str(i)
     question = utils.read_file(PATH_TO_DATA + "/" + zero_padded + "/question.txt")
     solutions = utils.read_json(PATH_TO_DATA + "/" + zero_padded + "/solutions.json")
@@ -25,11 +35,25 @@ def fetch_data_from_index(i: int):
 def prepare_inference_prompt_solution(
     question: str,
     solution: str,
-    n=lambda x: x - 1,
-    min_ast_num_nodes=7,
-    pref="# Python\n# Complete the next line of the given code\n",
-    post="\n# Solution:\n",
-):
+    n: Callable[[int], int] = lambda x: x - 1,
+    min_ast_num_nodes: int = 7,
+    pref: str = "# Python\n# Complete the next line of the given code\n",
+    post: str = "\n# Solution:\n",
+) -> Dict[str, Union[str, int]]:
+    """
+    Prepares an inference prompt and solution from a given question and solution.
+
+    Args:
+        question (str): The question to prepare the inference prompt from.
+        solution (str): The solution to prepare the inference prompt from.
+        n (Callable[[int], int], optional): A function to determine the number of lines shown. Defaults to lambda x: x - 1.
+        min_ast_num_nodes (int, optional): The minimum number of AST nodes for the line to be considered complicated enough. Defaults to 7.
+        pref (str, optional): The prefix to add to the prompt. Defaults to "# Python\n# Complete the next line of the given code\n".
+        post (str, optional): The postfix to add to the prompt. Defaults to "\n# Solution:\n".
+
+    Returns:
+        dict: A dictionary containing the prepared prompt, solution, number of lines shown, and the whole solution.
+    """
     commented_question = utils.comment_out_lines(question)
     solution_lst = [line for line in solution.split("\n") if len(line.strip()) > 0]
     lines_shown = n(len(solution_lst))
